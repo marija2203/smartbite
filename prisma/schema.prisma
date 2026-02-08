@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+
+model Korisnik {
+  id      Int    @id @default(autoincrement())
+  ime     String
+  prezime String
+  email   String @unique
+  lozinka String
+
+  uloga   Uloga  @default(KUPAC)
+  aktivan Boolean @default(true)
+
+  porudzbine Porudzbina[]
+  dostave    Dostava[]
+  restorani  Restoran[]
+}
+
+model Restoran {
+  id      Int    @id @default(autoincrement())
+  naziv   String
+  adresa  String
+  telefon String
+  aktivan Boolean @default(true)
+
+  vlasnikId Int
+  vlasnik   Korisnik @relation(fields: [vlasnikId], references: [id])
+
+  stavke     StavkaMenija[]
+  porudzbine Porudzbina[]
+}
+
+model StavkaMenija {
+  id       Int    @id @default(autoincrement())
+  naziv    String
+  opis     String
+  cena     Float
+  dostupna Boolean @default(true)
+
+  restoranId       Int
+  restoran         Restoran           @relation(fields: [restoranId], references: [id])
+  stavkePorudzbine StavkaPorudzbine[]
+}
+
+model Porudzbina {
+  id             Int             @id @default(autoincrement())
+  adresaDostave  String
+  status         StatusPorudzbine @default(KREIRANA)
+  ukupnaCena     Float
+  vremeKreiranja DateTime        @default(now())
+
+  kupacId Int
+  kupac   Korisnik @relation(fields: [kupacId], references: [id])
+
+  restoranId Int
+  restoran   Restoran @relation(fields: [restoranId], references: [id])
+
+  dostava Dostava?
+  stavke  StavkaPorudzbine[]
+}
+
+model Dostava {
+  id              Int          @id @default(autoincrement())
+  status          StatusDostave @default(DODELJENA)
+  procenjenoVreme Int
+
+  porudzbinaId Int        @unique
+  porudzbina   Porudzbina @relation(fields: [porudzbinaId], references: [id])
+
+  dostavljacId Int
+  dostavljac   Korisnik @relation(fields: [dostavljacId], references: [id])
+}
+
+model StavkaPorudzbine {
+  id Int @id @default(autoincrement())
+
+  porudzbinaId Int
+  porudzbina   Porudzbina @relation(fields: [porudzbinaId], references: [id], onDelete: Cascade)
+
+  stavkaMenijaId Int
+  stavkaMenija   StavkaMenija @relation(fields: [stavkaMenijaId], references: [id])
+
+  kolicina      Int
+  jedinicnaCena Float
+}
+
+enum Uloga {
+  KUPAC
+  RESTORAN
+  DOSTAVLJAC
+  ADMIN
+}
+
+enum StatusPorudzbine {
+  KREIRANA
+  PRIHVACENA
+  U_PRIPREMI
+  NA_PUTU
+  DOSTAVLJENA
+  OTKAZANA
+}
+
+enum StatusDostave {
+  DODELJENA
+  PREUZETA
+  U_TOKU
+  DOSTAVLJENA
+  OTKAZANA
+}
