@@ -427,3 +427,6 @@ body {
   font-weight: 900;
   color: #7a1f1f;
 }
+/* Safety: ništa u kartici ne sme da blokira klik */
+.sb-card * { pointer-events: auto; }
+.sb-title::after { pointer-events: none; }
