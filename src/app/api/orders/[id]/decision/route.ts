@@ -3,8 +3,6 @@ import { prisma } from "@/lib/prisma"
 import jwt from "jsonwebtoken"
 import { StatusPorudzbine } from "@prisma/client"
 
-const JWT_SECRET = process.env.JWT_SECRET!
-
 type TokenUser = { id: number; uloga: string; email: string }
 
 function getUserFromAuth(req: NextRequest): TokenUser | null {
@@ -12,25 +10,37 @@ function getUserFromAuth(req: NextRequest): TokenUser | null {
   if (!auth?.startsWith("Bearer ")) return null
 
   const token = auth.slice("Bearer ".length)
+  const secret = process.env.JWT_SECRET
+  if (!secret) return null
 
   try {
-    return jwt.verify(token, JWT_SECRET) as TokenUser
+    return jwt.verify(token, secret) as TokenUser
   } catch {
     return null
   }
 }
 
-type RouteContext = { params: { id: string } }
-
-export async function PATCH(req: NextRequest, { params }: RouteContext) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
+    // Ako secret fali u env, nema smisla dalje
+    if (!process.env.JWT_SECRET) {
+      return NextResponse.json(
+        { error: "Nedostaje JWT_SECRET u environment variables." },
+        { status: 500 }
+      )
+    }
+
     const user = getUserFromAuth(req)
     if (!user) {
       return NextResponse.json(
-        { error: "Niste prijavljeni (nema Authorization header-a)." },
+        { error: "Niste prijavljeni (nema Authorization header-a / token nevažeći)." },
         { status: 401 }
       )
     }
+
     if (user.uloga !== "RESTORAN") {
       return NextResponse.json(
         { error: "Samo RESTORAN može da prihvati/odbije porudžbinu." },
@@ -43,7 +53,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "Neispravan id." }, { status: 400 })
     }
 
-    const body = await req.json().catch(() => ({}))
+    const body = await req.json().catch(() => ({} as any))
     const akcija = String(body?.akcija ?? "")
 
     if (akcija !== "PRIHVATI" && akcija !== "ODBIJ") {
@@ -90,8 +100,10 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       )
     }
 
-    const newStatus: StatusPorudzbine =
-      akcija === "PRIHVATI" ? StatusPorudzbine.PRIHVACENA : StatusPorudzbine.OTKAZANA
+    const newStatus =
+      akcija === "PRIHVATI"
+        ? StatusPorudzbine.PRIHVACENA
+        : StatusPorudzbine.OTKAZANA
 
     const updated = await prisma.porudzbina.update({
       where: { id: orderId },
@@ -99,7 +111,13 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     })
 
     return NextResponse.json(
-      { message: `Porudžbina ${newStatus.toLowerCase()}.`, porudzbina: updated },
+      {
+        message:
+          newStatus === StatusPorudzbine.PRIHVACENA
+            ? "Porudžbina prihvaćena."
+            : "Porudžbina otkazana.",
+        porudzbina: updated,
+      },
       { status: 200 }
     )
   } catch (e) {
