@@ -1,18 +1,26 @@
+"use client"
+
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export default function Home() {
+  const router = useRouter()
+
   return (
     <main className="sb-bg">
       <div className="sb-card">
-        <h1 className="sb-title">SmartBite</h1>
-        <p className="sb-subtitle">
-          🍴✨ SmartBite – klikni. Poruči. Uživaj.
-        </p>
+        <h1 className="sb-title" data-text="SmartBite">SmartBite</h1>
+
+        <p className="sb-subtitle">🍴✨ SmartBite – klikni. Poruči. Uživaj.</p>
 
         <div style={{ display: "grid", gap: 12, marginTop: 18 }}>
-          <Link className="sb-btn" href="/login">
+          <button
+            type="button"
+            className="sb-btn"
+            onClick={() => router.push("/login")}
+          >
             Prijavi se
-          </Link>
+          </button>
 
           <Link className="sb-btn" href="/register">
             Registruj se
@@ -26,5 +34,3 @@ export default function Home() {
     </main>
   )
 }
-<h1 className="sb-title" data-text="SmartBite">SmartBite</h1>
-

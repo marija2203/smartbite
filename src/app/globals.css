@@ -430,3 +430,4 @@ body {
 /* Safety: ništa u kartici ne sme da blokira klik */
 .sb-card * { pointer-events: auto; }
 .sb-title::after { pointer-events: none; }
+.sb-title::after { pointer-events: none; }
