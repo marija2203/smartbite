@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import jwt from "jsonwebtoken"
+import { StatusPorudzbine } from "@prisma/client"
 
 const JWT_SECRET = process.env.JWT_SECRET!
 
@@ -9,6 +10,7 @@ type TokenUser = { id: number; uloga: string; email: string }
 function getUserFromAuth(req: NextRequest): TokenUser | null {
   const auth = req.headers.get("authorization")
   if (!auth?.startsWith("Bearer ")) return null
+
   const token = auth.slice("Bearer ".length)
 
   try {
@@ -18,9 +20,9 @@ function getUserFromAuth(req: NextRequest): TokenUser | null {
   }
 }
 
-type Ctx = { params: Promise<{ id: string }> }
+type RouteContext = { params: { id: string } }
 
-export async function PATCH(req: NextRequest, ctx: Ctx) {
+export async function PATCH(req: NextRequest, { params }: RouteContext) {
   try {
     const user = getUserFromAuth(req)
     if (!user) {
@@ -36,13 +38,15 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       )
     }
 
-    const { id } = await ctx.params
-    const orderId = Number(id)
+    const orderId = Number(params.id)
+    if (!params.id || Number.isNaN(orderId)) {
+      return NextResponse.json({ error: "Neispravan id." }, { status: 400 })
+    }
 
     const body = await req.json().catch(() => ({}))
     const akcija = String(body?.akcija ?? "")
 
-    if (!orderId || (akcija !== "PRIHVATI" && akcija !== "ODBIJ")) {
+    if (akcija !== "PRIHVATI" && akcija !== "ODBIJ") {
       return NextResponse.json(
         { error: 'Pošalji: { akcija: "PRIHVATI" } ili { akcija: "ODBIJ" }.' },
         { status: 400 }
@@ -79,14 +83,15 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       )
     }
 
-    if (order.status !== "KREIRANA") {
+    if (order.status !== StatusPorudzbine.KREIRANA) {
       return NextResponse.json(
         { error: "Porudžbina je već obrađena." },
         { status: 409 }
       )
     }
 
-    const newStatus = akcija === "PRIHVATI" ? "PRIHVACENA" : "ODBIJENA"
+    const newStatus: StatusPorudzbine =
+      akcija === "PRIHVATI" ? StatusPorudzbine.PRIHVACENA : StatusPorudzbine.OTKAZANA
 
     const updated = await prisma.porudzbina.update({
       where: { id: orderId },
