@@ -13,6 +13,7 @@ export default function RegisterPage() {
   const router = useRouter()
 
   const [ime, setIme] = useState("")
+  const [prezime, setPrezime] = useState("")
   const [email, setEmail] = useState("")
   const [lozinka, setLozinka] = useState("")
   const [uloga, setUloga] = useState<"KUPAC" | "RESTORAN">("KUPAC")
@@ -29,7 +30,7 @@ export default function RegisterPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ime, email, lozinka, uloga }),
+        body: JSON.stringify({ ime, prezime, email, lozinka, uloga }),
       })
 
       const data: RegisterResponse = await res.json().catch(() => ({}))
@@ -60,9 +61,7 @@ export default function RegisterPage() {
         <h1 className="sb-title" data-text="Registracija">
           Registracija
         </h1>
-        <p className="sb-subtitle">
-          Tvoj omiljeni obrok je samo klik daleko🫧💙
-        </p>
+        <p className="sb-subtitle">Tvoj omiljeni obrok je samo klik daleko🫧💙</p>
 
         <form onSubmit={handleSubmit}>
           <label style={{ display: "block", marginBottom: 6, fontWeight: 600 }}>
@@ -77,14 +76,25 @@ export default function RegisterPage() {
           />
 
           <label style={{ display: "block", marginBottom: 6, fontWeight: 600 }}>
+            Prezime
+          </label>
+          <input
+            className="sb-input"
+            placeholder="Unesi prezime"
+            value={prezime}
+            onChange={(e) => setPrezime(e.target.value)}
+            required
+          />
+
+          <label style={{ display: "block", marginBottom: 6, fontWeight: 600 }}>
             Email
           </label>
           <input
             className="sb-input"
+            type="email"
             placeholder="npr. marija@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            inputMode="email"
             autoComplete="email"
             required
           />
@@ -100,6 +110,7 @@ export default function RegisterPage() {
             onChange={(e) => setLozinka(e.target.value)}
             autoComplete="new-password"
             required
+            minLength={6}
           />
 
           <label style={{ display: "block", marginBottom: 6, fontWeight: 600 }}>
@@ -108,10 +119,9 @@ export default function RegisterPage() {
           <select
             className="sb-input"
             value={uloga}
-            onChange={(e) =>
-              setUloga(e.target.value as "KUPAC" | "RESTORAN")
-            }
+            onChange={(e) => setUloga(e.target.value as "KUPAC" | "RESTORAN")}
             style={{ marginBottom: 16 }}
+            required
           >
             <option value="KUPAC">Kupac</option>
             <option value="RESTORAN">Restoran</option>
@@ -134,19 +144,9 @@ export default function RegisterPage() {
 
           {error && <div className="sb-error">{error}</div>}
 
-          <p
-            style={{
-              marginTop: 14,
-              fontSize: 13,
-              color: "#6b7280",
-              textAlign: "center",
-            }}
-          >
+          <p style={{ marginTop: 14, fontSize: 13, color: "#6b7280", textAlign: "center" }}>
             Već imaš nalog?{" "}
-            <a
-              href="/login"
-              style={{ fontWeight: 800, textDecoration: "none" }}
-            >
+            <a href="/login" style={{ fontWeight: 800, textDecoration: "none" }}>
               Prijavi se ✨
             </a>
           </p>
@@ -155,3 +155,4 @@ export default function RegisterPage() {
     </main>
   )
 }
+

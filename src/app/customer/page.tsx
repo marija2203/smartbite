@@ -16,6 +16,10 @@ type CartItem = {
   kolicina: number
 }
 
+function getToken() {
+  return typeof window !== "undefined" ? localStorage.getItem("token") : null
+}
+
 export default function CustomerPage() {
   const router = useRouter()
   const [stavke, setStavke] = useState<Stavka[]>([])
@@ -28,25 +32,18 @@ export default function CustomerPage() {
 
   const restoranId = 1
 
-  useEffect(() => {
-    const token = localStorage.getItem("token")
-    if (!token) router.push("/login")
-  }, [router])
-
   async function loadMenu() {
     try {
       setError("")
       setSuccess("")
       setLoadingMenu(true)
 
-      const token = localStorage.getItem("token")
-      const res = await fetch(`/api/menu-items?restoranId=${restoranId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch(`/api/restaurants/${restoranId}`)
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || "Greška pri učitavanju menija.")
 
-      setStavke(Array.isArray(data.stavke) ? data.stavke : [])
+      if (!res.ok) throw new Error(data.error || "Greška pri učitavanju restorana.")
+
+      setStavke(Array.isArray(data?.restoran?.stavke) ? data.restoran.stavke : [])
     } catch (e: any) {
       setError(e.message)
     } finally {
@@ -109,9 +106,15 @@ export default function CustomerPage() {
         return
       }
 
+      const token = getToken()
+      if (!token) {
+        setError("Za poručivanje je potrebna prijava.")
+        router.push("/login")
+        return
+      }
+
       setPlacing(true)
 
-      const token = localStorage.getItem("token")
       const payload = {
         adresaDostave,
         restoranId,
@@ -148,7 +151,6 @@ export default function CustomerPage() {
 
   return (
     <div className="sb-bg-customer">
-      {/* Top bar */}
       <div className="sb-navbar">
         <div>
           <div style={{ fontWeight: 900, fontSize: 18 }}>SmartBite</div>
@@ -189,15 +191,7 @@ export default function CustomerPage() {
           </div>
         )}
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "2fr 1fr",
-            gap: 18,
-            marginTop: 16,
-          }}
-        >
-          {/* Menu */}
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 18, marginTop: 16 }}>
           <div className="sb-panel">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h2 style={{ margin: 0 }}>Meni</h2>
@@ -246,7 +240,6 @@ export default function CustomerPage() {
             </div>
           </div>
 
-          {/* Cart */}
           <div className="sb-panel">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h2 style={{ margin: 0 }}>Korpa</h2>
@@ -318,21 +311,14 @@ export default function CustomerPage() {
                     >
                       {placing ? "Poručujem..." : "Kreiraj porudžbinu"}
                     </button>
-
-                    <div style={{ marginTop: 10, fontSize: 12, color: "rgba(42,42,42,0.65)" }}>
-                      API: <code>POST /api/orders</code>
-                    </div>
                   </div>
                 </div>
               )}
             </div>
           </div>
         </div>
-
-        <div style={{ marginTop: 18, color: "rgba(42,42,42,0.65)", fontSize: 12 }}>
-          Predlog za screenshot: 1) Meni + korpa 2) Nakon klika “Kreiraj porudžbinu” (poruka sa ID porudžbine).
-        </div>
       </div>
     </div>
   )
 }
+

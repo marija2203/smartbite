@@ -7,9 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-
-
 model Korisnik {
   id      Int    @id @default(autoincrement())
   ime     String
@@ -17,7 +14,7 @@ model Korisnik {
   email   String @unique
   lozinka String
 
-  uloga   Uloga  @default(KUPAC)
+  uloga   Uloga   @default(KUPAC)
   aktivan Boolean @default(true)
 
   porudzbine Porudzbina[]
@@ -26,11 +23,12 @@ model Korisnik {
 }
 
 model Restoran {
-  id      Int    @id @default(autoincrement())
-  naziv   String
-  adresa  String
-  telefon String
-  aktivan Boolean @default(true)
+  id                   Int     @id @default(autoincrement())
+  naziv                String
+  adresa               String
+  telefon              String
+  aktivan              Boolean @default(true)
+  prosecnoVremeDostave Int     @default(45)
 
   vlasnikId Int
   vlasnik   Korisnik @relation(fields: [vlasnikId], references: [id])
@@ -40,7 +38,7 @@ model Restoran {
 }
 
 model StavkaMenija {
-  id       Int    @id @default(autoincrement())
+  id       Int     @id @default(autoincrement())
   naziv    String
   opis     String
   cena     Float
@@ -52,11 +50,11 @@ model StavkaMenija {
 }
 
 model Porudzbina {
-  id             Int             @id @default(autoincrement())
+  id             Int              @id @default(autoincrement())
   adresaDostave  String
   status         StatusPorudzbine @default(KREIRANA)
   ukupnaCena     Float
-  vremeKreiranja DateTime        @default(now())
+  vremeKreiranja DateTime         @default(now())
 
   kupacId Int
   kupac   Korisnik @relation(fields: [kupacId], references: [id])
@@ -69,7 +67,7 @@ model Porudzbina {
 }
 
 model Dostava {
-  id              Int          @id @default(autoincrement())
+  id              Int           @id @default(autoincrement())
   status          StatusDostave @default(DODELJENA)
   procenjenoVreme Int
 

@@ -1,37 +1,39 @@
-import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
-
+import { NextResponse } from "next/server"
+import bcrypt from "bcryptjs"
+import jwt from "jsonwebtoken"
+import { prisma } from "@/lib/prisma"
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { ime, prezime, email, lozinka, uloga } = body;
+    const body = await req.json().catch(() => ({} as any))
+    const { ime, prezime, email, lozinka, uloga } = body
 
-    if (!ime || !prezime || !email || !lozinka || !uloga) {
-      return NextResponse.json(
-        { error: "Nedostaju obavezna polja." },
-        { status: 400 }
-      );
+    if (!ime || !email || !lozinka || !uloga) {
+      return NextResponse.json({ error: "Nedostaju obavezna polja." }, { status: 400 })
     }
 
-    const existing = await prisma.korisnik.findUnique({
-      where: { email },
-    });
-
+    const existing = await prisma.korisnik.findUnique({ where: { email } })
     if (existing) {
       return NextResponse.json(
         { error: "Nalog sa ovom email adresom vec postoji." },
         { status: 409 }
-      );
+      )
     }
 
-    const hash = await bcrypt.hash(lozinka, 10);
+    const secret = process.env.JWT_SECRET
+    if (!secret) {
+      return NextResponse.json(
+        { error: "JWT_SECRET nije podesen u environment variables." },
+        { status: 500 }
+      )
+    }
+
+    const hash = await bcrypt.hash(lozinka, 10)
 
     const user = await prisma.korisnik.create({
       data: {
         ime,
-        prezime,
+        prezime: prezime ?? "",
         email,
         lozinka: hash,
         uloga,
@@ -44,13 +46,30 @@ export async function POST(req: Request) {
         email: true,
         uloga: true,
       },
-    });
+    })
 
-    return NextResponse.json(
-      { message: "Registracija uspesna.", user },
+    const token = jwt.sign(
+      { id: user.id, uloga: user.uloga, email: user.email },
+      secret,
+      { expiresIn: "2h" }
+    )
+
+    const res = NextResponse.json(
+      { message: "Registracija uspesna.", user, token },
       { status: 201 }
-    );
-  } catch {
-    return NextResponse.json({ error: "Greska na serveru." }, { status: 500 });
+    )
+
+    res.cookies.set("token", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 2,
+    })
+
+    return res
+  } catch (e) {
+    console.error(e)
+    return NextResponse.json({ error: "Greska na serveru." }, { status: 500 })
   }
 }
