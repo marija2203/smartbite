@@ -431,3 +431,12 @@ body {
 .sb-card * { pointer-events: auto; }
 .sb-title::after { pointer-events: none; }
 .sb-title::after { pointer-events: none; }
+.sb-btn,
+.sb-btn-secondary,
+.sb-home-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
