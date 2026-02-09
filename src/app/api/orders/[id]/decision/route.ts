@@ -22,7 +22,7 @@ function getUserFromAuth(req: NextRequest): TokenUser | null {
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Ako secret fali u env, nema smisla dalje
@@ -48,8 +48,9 @@ export async function PATCH(
       )
     }
 
-    const orderId = Number(params.id)
-    if (!params.id || Number.isNaN(orderId)) {
+    const { id } = await params
+    const orderId = Number(id)
+    if (!id || Number.isNaN(orderId)) {
       return NextResponse.json({ error: "Neispravan id." }, { status: 400 })
     }
 
@@ -125,4 +126,3 @@ export async function PATCH(
     return NextResponse.json({ error: "Greška na serveru." }, { status: 500 })
   }
 }
-
