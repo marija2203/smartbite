@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🍔 SmartBite
 
-## Getting Started
+SmartBite je web aplikacija za online poručivanje hrane.  
+Omogućava korisnicima da pregledaju restorane i meni, kreiraju porudžbine, dok restorani i dostavljači upravljaju procesom isporuke.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 Tehnologije
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Next.js 15 (App Router)
+- TypeScript
+- Prisma ORM
+- SQLite baza podataka
+- JWT autentifikacija
+- REST API arhitektura
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📦 Funkcionalnosti
 
-## Learn More
+- Registracija i prijava korisnika
+- Role-based pristup (RBAC)
+- Upravljanje restoranima i menijem
+- Kreiranje porudžbina
+- Praćenje statusa porudžbine
+- Upravljanje dostavom
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 👤 Uloge korisnika
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Sistem koristi **Role-Based Access Control**.
 
-## Deploy on Vercel
+Enum `Uloga`:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `KUPAC` – kreira porudžbine
+- `RESTORAN` – upravlja menijem i porudžbinama
+- `DOSTAVLJAC` – preuzima i realizuje dostave
+- `ADMIN` – administracija sistema
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Polje `uloga` u modelu `Korisnik` je tipa `Uloga` sa podrazumevanom vrednošću `KUPAC`.
+
+---
+
+## 📊 Statusi sistema
+
+### StatusPorudzbine
+
+- KREIRANA
+- PRIHVACENA
+- U_PRIPREMI
+- NA_PUTU
+- DOSTAVLJENA
+- OTKAZANA
+
+### StatusDostave
+
+- DODELJENA
+- PREUZETA
+- U_TOKU
+- DOSTAVLJENA
+- OTKAZANA
+
+---
+
+## 🗄 Baza podataka
+
+Projekat koristi **SQLite** bazu (`dev.db`).
+
+Struktura baze je definisana u:
+
