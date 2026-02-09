@@ -38,12 +38,10 @@ export default function RegisterPage() {
         throw new Error(data?.error || "Greška pri registraciji")
       }
 
-      // ako backend vraća token odmah – super
       if (data?.token) {
         localStorage.setItem("token", data.token)
       }
 
-      // redirect po ulozi (ako user postoji), u suprotnom na login
       const role = data?.user?.uloga || uloga
       if (role === "RESTORAN") router.push("/restaurant")
       else if (role === "KUPAC") router.push("/customer")
@@ -59,8 +57,12 @@ export default function RegisterPage() {
   return (
     <main className="sb-bg-register">
       <div className="sb-card">
-        <h1 className="sb-title" data-text="Registracija">Registracija</h1>
-        <p className="sb-subtitle">Tvoj omiljeni obrok je samo klik daleko🫧💙</p>
+        <h1 className="sb-title" data-text="Registracija">
+          Registracija
+        </h1>
+        <p className="sb-subtitle">
+          Tvoj omiljeni obrok je samo klik daleko🫧💙
+        </p>
 
         <form onSubmit={handleSubmit}>
           <label style={{ display: "block", marginBottom: 6, fontWeight: 600 }}>
@@ -106,22 +108,45 @@ export default function RegisterPage() {
           <select
             className="sb-input"
             value={uloga}
-            onChange={(e) => setUloga(e.target.value as "KUPAC" | "RESTORAN")}
+            onChange={(e) =>
+              setUloga(e.target.value as "KUPAC" | "RESTORAN")
+            }
             style={{ marginBottom: 16 }}
           >
             <option value="KUPAC">Kupac</option>
             <option value="RESTORAN">Restoran</option>
           </select>
 
-          <button className="sb-btn" type="submit" disabled={loading}>
+          <button
+            className="sb-btn"
+            type="submit"
+            disabled={loading}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              width: "100%",
+            }}
+          >
             {loading ? "Kreiram nalog..." : "Registruj se"}
           </button>
 
           {error && <div className="sb-error">{error}</div>}
 
-          <p style={{ marginTop: 14, fontSize: 13, color: "#6b7280", textAlign: "center" }}>
+          <p
+            style={{
+              marginTop: 14,
+              fontSize: 13,
+              color: "#6b7280",
+              textAlign: "center",
+            }}
+          >
             Već imaš nalog?{" "}
-            <a href="/login" style={{ fontWeight: 800, textDecoration: "none" }}>
+            <a
+              href="/login"
+              style={{ fontWeight: 800, textDecoration: "none" }}
+            >
               Prijavi se ✨
             </a>
           </p>
