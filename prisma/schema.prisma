@@ -13,6 +13,8 @@ model Korisnik {
   prezime String
   email   String @unique
   lozinka String
+  telefon String?
+
 
   uloga   Uloga   @default(KUPAC)
   aktivan Boolean @default(true)
