@@ -10,7 +10,11 @@ type Porudzbina = {
   ukupno?: number
 }
 
-export default function RestaurantOrdersPage() {
+function getToken() {
+  return typeof window !== "undefined" ? localStorage.getItem("token") : null
+}
+
+export default function RestaurantPage() {
   const router = useRouter()
 
   const [orders, setOrders] = useState<Porudzbina[]>([])
@@ -26,7 +30,7 @@ export default function RestaurantOrdersPage() {
       setSuccess("")
       setLoading(true)
 
-      const token = localStorage.getItem("token")
+      const token = getToken()
       if (!token) {
         router.push("/login")
         return
@@ -48,6 +52,11 @@ export default function RestaurantOrdersPage() {
   }
 
   useEffect(() => {
+    const token = getToken()
+    if (!token) {
+      router.push("/login")
+      return
+    }
     loadOrders()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -65,15 +74,12 @@ export default function RestaurantOrdersPage() {
       setSuccess("")
       setChangingId(orderId)
 
-      const token = localStorage.getItem("token")
+      const token = getToken()
       if (!token) {
         router.push("/login")
         return
       }
 
-      // ✅ OVO JE NAJČEŠĆI FORMAT:
-      // PUT /api/orders/:id/status  { status: "PRIHVACENA" }
-      // Ako ti backend koristi drugi endpoint, reci mi i prilagodim.
       const res = await fetch(`/api/orders/${orderId}/status`, {
         method: "PUT",
         headers: {
@@ -128,9 +134,7 @@ export default function RestaurantOrdersPage() {
           {success && <div className="sb-alert sb-alert--ok">✅ {success}</div>}
 
           <div className="sb-grid">
-            {orders.length === 0 && !loading && (
-              <div className="sb-muted">Nema porudžbina još.</div>
-            )}
+            {orders.length === 0 && !loading && <div className="sb-muted">Nema porudžbina još.</div>}
 
             {orders.map((o) => (
               <div key={o.id} className="sb-order-card">

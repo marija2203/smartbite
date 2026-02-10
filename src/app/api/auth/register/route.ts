@@ -2,24 +2,21 @@ import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import { prisma } from "@/lib/prisma"
-export const runtime = "nodejs"
 
+export const runtime = "nodejs"
 
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({} as any))
-    const { ime, prezime, email, lozinka, uloga } = body
+
+    const ime = (body?.ime ?? "").trim()
+    const prezime = (body?.prezime ?? "").trim() // opcionalno
+    const email = (body?.email ?? "").trim().toLowerCase()
+    const lozinka = (body?.lozinka ?? "").toString()
+    const uloga = body?.uloga
 
     if (!ime || !email || !lozinka || !uloga) {
       return NextResponse.json({ error: "Nedostaju obavezna polja." }, { status: 400 })
-    }
-
-    const existing = await prisma.korisnik.findUnique({ where: { email } })
-    if (existing) {
-      return NextResponse.json(
-        { error: "Nalog sa ovom email adresom vec postoji." },
-        { status: 409 }
-      )
     }
 
     const secret = process.env.JWT_SECRET
@@ -30,12 +27,20 @@ export async function POST(req: Request) {
       )
     }
 
+    const existing = await prisma.korisnik.findUnique({ where: { email } })
+    if (existing) {
+      return NextResponse.json(
+        { error: "Nalog sa ovom email adresom već postoji." },
+        { status: 409 }
+      )
+    }
+
     const hash = await bcrypt.hash(lozinka, 10)
 
     const user = await prisma.korisnik.create({
       data: {
         ime,
-        prezime: prezime ?? "",
+        prezime, // ostaje "" ako nije poslato
         email,
         lozinka: hash,
         uloga,
@@ -57,10 +62,11 @@ export async function POST(req: Request) {
     )
 
     const res = NextResponse.json(
-      { message: "Registracija uspesna.", user, token },
+      { message: "Registracija uspešna.", user, token },
       { status: 201 }
     )
 
+    // cookie je ok za Vercel (Node runtime)
     res.cookies.set("token", token, {
       httpOnly: true,
       sameSite: "lax",
@@ -72,6 +78,6 @@ export async function POST(req: Request) {
     return res
   } catch (e) {
     console.error(e)
-    return NextResponse.json({ error: "Greska na serveru." }, { status: 500 })
+    return NextResponse.json({ error: "Greška na serveru." }, { status: 500 })
   }
 }
