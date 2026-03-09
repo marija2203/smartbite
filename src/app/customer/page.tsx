@@ -28,6 +28,7 @@ function CustomerPageContent() {
 
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [adresaDostave, setAdresaDostave] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -76,7 +77,9 @@ function CustomerPageContent() {
       });
 
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Greška pri učitavanju menija.");
+      if (!res.ok) {
+        throw new Error(data.error || "Greška pri učitavanju menija.");
+      }
 
       setMenu(
         Array.isArray(data.stavke)
@@ -108,6 +111,11 @@ function CustomerPageContent() {
         return;
       }
 
+      if (!adresaDostave.trim()) {
+        setError("Unesi adresu dostave.");
+        return;
+      }
+
       if (cart.length === 0) {
         setError("Korpa je prazna.");
         return;
@@ -121,6 +129,7 @@ function CustomerPageContent() {
         },
         body: JSON.stringify({
           restoranId: Number(restoranId),
+          adresaDostave: adresaDostave.trim(),
           stavke: cart.map((c) => ({
             stavkaMenijaId: c.item.id,
             kolicina: c.qty,
@@ -129,10 +138,13 @@ function CustomerPageContent() {
       });
 
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Greška pri kreiranju porudžbine.");
+      if (!res.ok) {
+        throw new Error(data.error || "Greška pri kreiranju porudžbine.");
+      }
 
       setSuccess(`Porudžbina je kreirana. ID: #${data.id ?? "?"}`);
       setCart([]);
+      setAdresaDostave("");
     } catch (e: any) {
       setError(e.message);
     }
@@ -161,15 +173,24 @@ function CustomerPageContent() {
           <div className="sb-row">
             <div>
               <div className="sb-h1">SmartBite</div>
-              <div className="sb-muted">Kupac • Meni restorana #{restoranId ?? "—"}</div>
+              <div className="sb-muted">
+                Kupac • Meni restorana #{restoranId ?? "—"}
+              </div>
             </div>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <SBButton className="sb-btn-soft" onClick={loadMenu} disabled={loading}>
+              <SBButton
+                className="sb-btn-soft"
+                onClick={loadMenu}
+                disabled={loading}
+              >
                 {loading ? "Učitavanje..." : "Osveži"}
               </SBButton>
 
-              <SBButton className="sb-btn-soft" onClick={() => router.push("/restaurants")}>
+              <SBButton
+                className="sb-btn-soft"
+                onClick={() => router.push("/restaurants")}
+              >
                 Restorani
               </SBButton>
 
@@ -181,6 +202,19 @@ function CustomerPageContent() {
 
           {error && <div className="sb-alert sb-alert--error">⚠️ {error}</div>}
           {success && <div className="sb-alert sb-alert--ok">✅ {success}</div>}
+
+          <div style={{ marginTop: 16 }}>
+            <div className="sb-muted" style={{ marginBottom: 8 }}>
+              Adresa dostave
+            </div>
+            <input
+              className="sb-input"
+              type="text"
+              placeholder="Unesi adresu dostave"
+              value={adresaDostave}
+              onChange={(e) => setAdresaDostave(e.target.value)}
+            />
+          </div>
 
           <div className="sb-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
             <div className="sb-order-card">
@@ -202,7 +236,13 @@ function CustomerPageContent() {
 
                 {menu.map((m) => (
                   <div key={m.id} className="sb-order-card" style={{ padding: 14 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 12,
+                      }}
+                    >
                       <div>
                         <div style={{ fontWeight: 900 }}>{m.naziv}</div>
                         <div className="sb-muted">{m.opis ?? "—"}</div>
@@ -210,7 +250,10 @@ function CustomerPageContent() {
 
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ fontWeight: 900 }}>{m.cena} RSD</div>
-                        <SBButton className="sb-btn-soft" onClick={() => addToCart(m)}>
+                        <SBButton
+                          className="sb-btn-soft"
+                          onClick={() => addToCart(m)}
+                        >
                           Dodaj
                         </SBButton>
                       </div>
@@ -240,11 +283,19 @@ function CustomerPageContent() {
               </div>
 
               <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-                {cart.length === 0 && <div className="sb-muted">Korpa je prazna.</div>}
+                {cart.length === 0 && (
+                  <div className="sb-muted">Korpa je prazna.</div>
+                )}
 
                 {cart.map((c) => (
                   <div key={c.item.id} className="sb-order-card" style={{ padding: 14 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 12,
+                      }}
+                    >
                       <div>
                         <div style={{ fontWeight: 900 }}>{c.item.naziv}</div>
                         <div className="sb-muted">
@@ -252,7 +303,9 @@ function CustomerPageContent() {
                         </div>
                       </div>
 
-                      <div style={{ fontWeight: 900 }}>{c.qty * c.item.cena} RSD</div>
+                      <div style={{ fontWeight: 900 }}>
+                        {c.qty * c.item.cena} RSD
+                      </div>
                     </div>
                   </div>
                 ))}
