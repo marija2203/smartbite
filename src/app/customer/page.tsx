@@ -178,7 +178,7 @@ function CustomerPageContent() {
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <div className="sb-actions">
               <SBButton
                 className="sb-btn-soft"
                 onClick={loadMenu}
@@ -216,7 +216,7 @@ function CustomerPageContent() {
             />
           </div>
 
-          <div className="sb-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
+<div className="sb-grid sb-grid-customer">
             <div className="sb-order-card">
               <div
                 style={{
