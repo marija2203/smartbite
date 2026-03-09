@@ -98,4 +98,4 @@ npm run dev
 docker compose up --build
 
 ## Swagger
-/api/swagger
+/api/swagger# internet-tehnologije-2025-aplikacijazaporucivanjehrane_2021_0070
