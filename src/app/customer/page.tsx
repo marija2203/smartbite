@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import SBButton from "../components/SBButton"
-"use client";
+
 
 import { Suspense } from "react";
 
