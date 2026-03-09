@@ -89,3 +89,13 @@ docker compose up --build
 
 ## API documentation
 http://localhost:3000/api/swagger
+
+## Pokretanje projekta
+npm install
+npm run dev
+
+## Docker
+docker compose up --build
+
+## Swagger
+/api/swagger

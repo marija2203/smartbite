@@ -1,45 +1,76 @@
-"use client";
+"use client"
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+
+type User = {
+  id: number
+  ime: string
+  prezime: string
+  email: string
+  uloga: string
+}
 
 export default function AdminPage() {
-  const router = useRouter();
+  const router = useRouter()
+  const [users, setUsers] = useState<User[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const user = localStorage.getItem("user");
+    const token = localStorage.getItem("token")
 
-    if (!user) {
-      router.push("/login");
-      return;
+    if (!token) {
+      router.push("/login")
+      return
     }
 
-    const parsed = JSON.parse(user);
-
-    if (parsed.uloga !== "ADMIN") {
-      router.push("/restaurants");
-    }
-  }, []);
+    fetch("/api/users", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        setUsers(data.users || [])
+        setLoading(false)
+      })
+  }, [])
 
   return (
     <div style={{ padding: 40 }}>
-      <h1>Admin Panel</h1>
+      <h1 style={{ fontSize: 28, fontWeight: "bold", marginBottom: 20 }}>
+        Admin Panel
+      </h1>
 
-      <p>Dobrodošli u administratorski panel.</p>
+      <p style={{ marginBottom: 20 }}>
+        Dobrodošli u administratorski panel.
+      </p>
 
-      <div style={{ marginTop: 20 }}>
-        <button
-          onClick={() => alert("Ovde može ići upravljanje korisnicima")}
-          style={{
-            padding: "10px 20px",
-            background: "#111827",
-            color: "white",
-            borderRadius: 8,
-          }}
-        >
-          Upravljanje korisnicima
-        </button>
-      </div>
+      {loading && <p>Učitavanje korisnika...</p>}
+
+      {!loading && (
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Ime</th>
+              <th>Email</th>
+              <th>Uloga</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {users.map((u) => (
+              <tr key={u.id}>
+                <td>{u.id}</td>
+                <td>{u.ime} {u.prezime}</td>
+                <td>{u.email}</td>
+                <td>{u.uloga}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
-  );
+  )
 }
