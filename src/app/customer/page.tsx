@@ -1,110 +1,116 @@
-"use client"
+"use client";
 
-import { useEffect, useMemo, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import SBButton from "../components/SBButton"
-
-
-import { Suspense } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import SBButton from "../components/SBButton";
 
 type MenuItem = {
-  id: number
-  naziv: string
-  opis?: string | null
-  cena: number
-}
+  id: number;
+  naziv: string;
+  opis?: string | null;
+  cena: number;
+};
 
 type CartItem = {
-  item: MenuItem
-  qty: number
-}
+  item: MenuItem;
+  qty: number;
+};
 
 function getToken() {
-  return typeof window !== "undefined" ? localStorage.getItem("token") : null
+  return typeof window !== "undefined" ? localStorage.getItem("token") : null;
 }
 
-export default function CustomerPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
+function CustomerPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const restoranId = searchParams.get("restoranId") // string | null
+  const restoranId = searchParams.get("restoranId");
 
-  const [menu, setMenu] = useState<MenuItem[]>([])
-  const [cart, setCart] = useState<CartItem[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
+  const [menu, setMenu] = useState<MenuItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const total = useMemo(() => {
-    return cart.reduce((sum, c) => sum + c.item.cena * c.qty, 0)
-  }, [cart])
+    return cart.reduce((sum, c) => sum + c.item.cena * c.qty, 0);
+  }, [cart]);
 
   function addToCart(item: MenuItem) {
     setCart((prev) => {
-      const found = prev.find((x) => x.item.id === item.id)
+      const found = prev.find((x) => x.item.id === item.id);
       if (found) {
-        return prev.map((x) => (x.item.id === item.id ? { ...x, qty: x.qty + 1 } : x))
+        return prev.map((x) =>
+          x.item.id === item.id ? { ...x, qty: x.qty + 1 } : x
+        );
       }
-      return [...prev, { item, qty: 1 }]
-    })
+      return [...prev, { item, qty: 1 }];
+    });
   }
 
   function clearCart() {
-    setCart([])
-    setSuccess("")
-    setError("")
+    setCart([]);
+    setSuccess("");
+    setError("");
   }
 
   async function loadMenu() {
     try {
-      setError("")
-      setSuccess("")
-      setLoading(true)
+      setError("");
+      setSuccess("");
+      setLoading(true);
 
-      const token = getToken()
+      const token = getToken();
       if (!token) {
-        router.push("/login")
-        return
+        router.push("/login");
+        return;
       }
 
       if (!restoranId) {
-        setError("Nije izabran restoran. Vrati se na listu restorana.")
-        return
+        setError("Nije izabran restoran. Vrati se na listu restorana.");
+        return;
       }
 
       const res = await fetch(`/api/menu-items?restoranId=${restoranId}`, {
         headers: { Authorization: `Bearer ${token}` },
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || "Greška pri učitavanju menija.")
+      });
 
-      setMenu(Array.isArray(data.stavke) ? data.stavke : Array.isArray(data.menu) ? data.menu : [])
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Greška pri učitavanju menija.");
+
+      setMenu(
+        Array.isArray(data.stavke)
+          ? data.stavke
+          : Array.isArray(data.menu)
+          ? data.menu
+          : []
+      );
     } catch (e: any) {
-      setError(e.message)
+      setError(e.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   async function createOrder() {
     try {
-      setError("")
-      setSuccess("")
+      setError("");
+      setSuccess("");
 
-      const token = getToken()
+      const token = getToken();
       if (!token) {
-        router.push("/login")
-        return
+        router.push("/login");
+        return;
       }
 
       if (!restoranId) {
-        setError("Nije izabran restoran.")
-        return
+        setError("Nije izabran restoran.");
+        return;
       }
 
       if (cart.length === 0) {
-        setError("Korpa je prazna.")
-        return
+        setError("Korpa je prazna.");
+        return;
       }
 
       const res = await fetch("/api/orders", {
@@ -115,35 +121,38 @@ export default function CustomerPage() {
         },
         body: JSON.stringify({
           restoranId: Number(restoranId),
-          stavke: cart.map((c) => ({ stavkaMenijaId: c.item.id, kolicina: c.qty })),
+          stavke: cart.map((c) => ({
+            stavkaMenijaId: c.item.id,
+            kolicina: c.qty,
+          })),
         }),
-      })
+      });
 
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || "Greška pri kreiranju porudžbine.")
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Greška pri kreiranju porudžbine.");
 
-      setSuccess(`Porudžbina je kreirana. ID: #${data.id ?? "?"}`)
-      setCart([])
+      setSuccess(`Porudžbina je kreirana. ID: #${data.id ?? "?"}`);
+      setCart([]);
     } catch (e: any) {
-      setError(e.message)
+      setError(e.message);
     }
   }
 
   function logout() {
-    localStorage.removeItem("token")
-    localStorage.removeItem("user")
-    router.push("/login")
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    router.push("/login");
   }
 
   useEffect(() => {
-    const token = getToken()
+    const token = getToken();
     if (!token) {
-      router.push("/login")
-      return
+      router.push("/login");
+      return;
     }
-    loadMenu()
+    loadMenu();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restoranId])
+  }, [restoranId]);
 
   return (
     <div className="sb-bg">
@@ -174,14 +183,22 @@ export default function CustomerPage() {
           {success && <div className="sb-alert sb-alert--ok">✅ {success}</div>}
 
           <div className="sb-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
-            {/* MENI */}
             <div className="sb-order-card">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
                 <div style={{ fontWeight: 900, fontSize: 16 }}>Meni</div>
               </div>
 
               <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-                {menu.length === 0 && !loading && <div className="sb-muted">Nema stavki u meniju.</div>}
+                {menu.length === 0 && !loading && (
+                  <div className="sb-muted">Nema stavki u meniju.</div>
+                )}
 
                 {menu.map((m) => (
                   <div key={m.id} className="sb-order-card" style={{ padding: 14 }}>
@@ -203,9 +220,15 @@ export default function CustomerPage() {
               </div>
             </div>
 
-            {/* KORPA */}
             <div className="sb-order-card">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
                 <div style={{ fontWeight: 900, fontSize: 16 }}>Korpa</div>
                 <SBButton className="sb-btn-soft" onClick={clearCart}>
                   Očisti
@@ -235,7 +258,14 @@ export default function CustomerPage() {
                 ))}
               </div>
 
-              <div style={{ marginTop: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div
+                style={{
+                  marginTop: 14,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
                 <div style={{ fontWeight: 900 }}>Ukupno: {total} RSD</div>
                 <SBButton className="sb-btn-soft" onClick={createOrder}>
                   Kreiraj porudžbinu
@@ -244,11 +274,17 @@ export default function CustomerPage() {
             </div>
           </div>
 
-          <div style={{ marginTop: 14 }} className="sb-muted">
-            
-          </div>
+          <div style={{ marginTop: 14 }} className="sb-muted"></div>
         </div>
       </div>
     </div>
-  )
+  );
+}
+
+export default function CustomerPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CustomerPageContent />
+    </Suspense>
+  );
 }
