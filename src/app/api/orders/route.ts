@@ -23,9 +23,6 @@ function getUserFromAuth(req: NextRequest): TokenUser | null {
   }
 }
 
-/**
- * POST /api/orders
- */
 export async function POST(req: NextRequest) {
   try {
     const user = getUserFromAuth(req);
@@ -199,17 +196,16 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (e) {
+    const message = e instanceof Error ? e.message : "Nepoznata greška";
     console.error("POST /api/orders error:", e);
+
     return NextResponse.json(
-      { error: "Greška na serveru." },
+      { error: message },
       { status: 500 }
     );
   }
 }
 
-/**
- * GET /api/orders
- */
 export async function GET(req: NextRequest) {
   try {
     const user = getUserFromAuth(req);
@@ -274,9 +270,11 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ error: "Nemate dozvolu." }, { status: 403 });
   } catch (e) {
+    const message = e instanceof Error ? e.message : "Nepoznata greška";
     console.error("GET /api/orders error:", e);
+
     return NextResponse.json(
-      { error: "Greška na serveru." },
+      { error: message },
       { status: 500 }
     );
   }
