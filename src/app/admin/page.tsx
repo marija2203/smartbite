@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import SBButton from "../components/SBButton"
 
 type User = {
   id: number
@@ -13,6 +14,7 @@ type User = {
 
 export default function AdminPage() {
   const router = useRouter()
+
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -26,51 +28,80 @@ export default function AdminPage() {
 
     fetch("/api/users", {
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     })
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         setUsers(data.users || [])
         setLoading(false)
       })
   }, [])
 
+  function logout() {
+    localStorage.removeItem("token")
+    localStorage.removeItem("user")
+    router.push("/login")
+  }
+
   return (
-    <div style={{ padding: 40 }}>
-      <h1 style={{ fontSize: 28, fontWeight: "bold", marginBottom: 20 }}>
-        Admin Panel
-      </h1>
+    <div className="sb-bg">
+      <div className="sb-container">
+        <div className="sb-panel">
 
-      <p style={{ marginBottom: 20 }}>
-        Dobrodošli u administratorski panel.
-      </p>
+          <div className="sb-row">
+            <div>
+              <div className="sb-h1">Admin Panel</div>
+              <div className="sb-muted">
+                Upravljanje korisnicima sistema
+              </div>
+            </div>
 
-      {loading && <p>Učitavanje korisnika...</p>}
+            <SBButton variant="danger" onClick={logout}>
+              Logout
+            </SBButton>
+          </div>
 
-      {!loading && (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Ime</th>
-              <th>Email</th>
-              <th>Uloga</th>
-            </tr>
-          </thead>
+          {loading && <div className="sb-muted">Učitavanje korisnika...</div>}
 
-          <tbody>
-            {users.map((u) => (
-              <tr key={u.id}>
-                <td>{u.id}</td>
-                <td>{u.ime} {u.prezime}</td>
-                <td>{u.email}</td>
-                <td>{u.uloga}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+          {!loading && (
+            <div style={{ marginTop: 20, display: "grid", gap: 12 }}>
+              {users.map((u) => (
+                <div key={u.id} className="sb-order-card">
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: 20,
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 900 }}>
+                        {u.ime} {u.prezime}
+                      </div>
+
+                      <div className="sb-muted">{u.email}</div>
+                    </div>
+
+                    <div
+                      style={{
+                        fontWeight: 900,
+                        padding: "6px 12px",
+                        borderRadius: 10,
+                        background: "#f3f4f6",
+                      }}
+                    >
+                      {u.uloga}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+        </div>
+      </div>
     </div>
   )
 }
