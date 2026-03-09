@@ -8,89 +8,76 @@ datasource db {
 }
 
 model Korisnik {
-  id      Int    @id @default(autoincrement())
-  ime     String
-  prezime String
-  email   String @unique
-  lozinka String
-  telefon String?
-
-
-  uloga   Uloga   @default(KUPAC)
-  aktivan Boolean @default(true)
-
-  porudzbine Porudzbina[]
+  id         Int          @id @default(autoincrement())
+  ime        String
+  prezime    String
+  email      String       @unique
+  lozinka    String
+  uloga      Uloga        @default(KUPAC)
+  aktivan    Boolean      @default(true)
+  telefon    String?
   dostave    Dostava[]
+  porudzbine Porudzbina[]
   restorani  Restoran[]
 }
 
 model Restoran {
-  id                   Int     @id @default(autoincrement())
+  id                   Int            @id @default(autoincrement())
   naziv                String
   adresa               String
   telefon              String
-  aktivan              Boolean @default(true)
-  prosecnoVremeDostave Int     @default(45)
-
-  vlasnikId Int
-  vlasnik   Korisnik @relation(fields: [vlasnikId], references: [id])
-
-  stavke     StavkaMenija[]
-  porudzbine Porudzbina[]
+  aktivan              Boolean        @default(true)
+  vlasnikId            Int
+  prosecnoVremeDostave Int            @default(45)
+  opis                 String?
+  porudzbine           Porudzbina[]
+  vlasnik              Korisnik       @relation(fields: [vlasnikId], references: [id])
+  stavke               StavkaMenija[]
 }
 
 model StavkaMenija {
-  id       Int     @id @default(autoincrement())
-  naziv    String
-  opis     String
-  cena     Float
-  dostupna Boolean @default(true)
-
+  id               Int                @id @default(autoincrement())
+  naziv            String
+  opis             String
+  cena             Float
+  dostupna         Boolean            @default(true)
   restoranId       Int
   restoran         Restoran           @relation(fields: [restoranId], references: [id])
   stavkePorudzbine StavkaPorudzbine[]
 }
 
 model Porudzbina {
-  id             Int              @id @default(autoincrement())
+  id             Int                @id @default(autoincrement())
   adresaDostave  String
-  status         StatusPorudzbine @default(KREIRANA)
+  status         StatusPorudzbine   @default(KREIRANA)
   ukupnaCena     Float
-  vremeKreiranja DateTime         @default(now())
-
-  kupacId Int
-  kupac   Korisnik @relation(fields: [kupacId], references: [id])
-
-  restoranId Int
-  restoran   Restoran @relation(fields: [restoranId], references: [id])
-
-  dostava Dostava?
-  stavke  StavkaPorudzbine[]
+  vremeKreiranja DateTime           @default(now())
+  kupacId        Int
+  restoranId     Int
+  dostava        Dostava?
+  kupac          Korisnik           @relation(fields: [kupacId], references: [id])
+  restoran       Restoran           @relation(fields: [restoranId], references: [id])
+  stavke         StavkaPorudzbine[]
 }
 
 model Dostava {
   id              Int           @id @default(autoincrement())
   status          StatusDostave @default(DODELJENA)
   procenjenoVreme Int
-
-  porudzbinaId Int        @unique
-  porudzbina   Porudzbina @relation(fields: [porudzbinaId], references: [id])
-
-  dostavljacId Int
-  dostavljac   Korisnik @relation(fields: [dostavljacId], references: [id])
+  porudzbinaId    Int           @unique
+  dostavljacId    Int
+  dostavljac      Korisnik      @relation(fields: [dostavljacId], references: [id])
+  porudzbina      Porudzbina    @relation(fields: [porudzbinaId], references: [id])
 }
 
 model StavkaPorudzbine {
-  id Int @id @default(autoincrement())
-
-  porudzbinaId Int
-  porudzbina   Porudzbina @relation(fields: [porudzbinaId], references: [id], onDelete: Cascade)
-
+  id             Int          @id @default(autoincrement())
+  porudzbinaId   Int
   stavkaMenijaId Int
+  kolicina       Int
+  jedinicnaCena  Float
+  porudzbina     Porudzbina   @relation(fields: [porudzbinaId], references: [id], onDelete: Cascade)
   stavkaMenija   StavkaMenija @relation(fields: [stavkaMenijaId], references: [id])
-
-  kolicina      Int
-  jedinicnaCena Float
 }
 
 enum Uloga {

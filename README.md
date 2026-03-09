@@ -69,3 +69,23 @@ Projekat koristi **SQLite** bazu (`dev.db`).
 
 Struktura baze je definisana u:
 
+
+Postoje najmanje **3 migracije** u:
+
+
+---
+
+## ⚙️ Pokretanje projekta
+
+### 1️⃣ Kloniranje repozitorijuma
+
+```bash
+git clone https://github.com/marija2203/smartbite.git
+cd smartbite
+
+
+## Running with Docker
+docker compose up --build
+
+## API documentation
+http://localhost:3000/api/swagger

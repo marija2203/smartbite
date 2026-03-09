@@ -39,7 +39,7 @@ export default function LoginPage() {
       if (data?.user?.uloga === "RESTORAN") {
         router.push("/restaurant")
       } else {
-        router.push("/customer")
+        router.push("/restaurants")
       }
     } catch (err: any) {
       setError(err.message)
@@ -96,5 +96,7 @@ export default function LoginPage() {
       </div>
     </main>
   )
+  
 }
+
 
