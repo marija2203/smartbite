@@ -1,57 +1,72 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+type UserRole = "RESTORAN" | "KUPAC" | "DOSTAVLJAC" | "ADMIN";
 
 type RegisterResponse = {
-  token?: string
-  user?: { uloga?: "RESTORAN" | "KUPAC" | string }
-  error?: string
-}
+  token?: string;
+  user?: { uloga?: UserRole };
+  error?: string;
+};
 
 export default function RegisterPage() {
-  const router = useRouter()
+  const router = useRouter();
 
-  const [ime, setIme] = useState("")
-  const [prezime, setPrezime] = useState("")
-  const [email, setEmail] = useState("")
-  const [lozinka, setLozinka] = useState("")
-  const [uloga, setUloga] = useState<"KUPAC" | "RESTORAN">("KUPAC")
+  const [ime, setIme] = useState("");
+  const [prezime, setPrezime] = useState("");
+  const [email, setEmail] = useState("");
+  const [lozinka, setLozinka] = useState("");
+  const [uloga, setUloga] = useState<UserRole>("KUPAC");
 
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError("")
-    setLoading(true)
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ime, prezime, email, lozinka, uloga }),
-      })
+      });
 
-      const data: RegisterResponse = await res.json().catch(() => ({}))
+      const data: RegisterResponse = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data?.error || "Greška pri registraciji")
+        throw new Error(data?.error || "Greška pri registraciji");
       }
 
       if (data?.token) {
-        localStorage.setItem("token", data.token)
+        localStorage.setItem("token", data.token);
       }
 
-      const role = data?.user?.uloga || uloga
-      if (role === "RESTORAN") router.push("/restaurant")
-      else if (role === "KUPAC") router.push("/customer")
-      else router.push("/login")
+      if (data?.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+
+      const role = data?.user?.uloga || uloga;
+
+      if (role === "ADMIN") {
+        router.push("/admin");
+      } else if (role === "DOSTAVLJAC") {
+        router.push("/deliveries");
+      } else if (role === "RESTORAN") {
+        router.push("/restaurant");
+      } else if (role === "KUPAC") {
+        router.push("/customer");
+      } else {
+        router.push("/login");
+      }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Nepoznata greška"
-      setError(msg)
+      const msg = err instanceof Error ? err.message : "Nepoznata greška";
+      setError(msg);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -119,12 +134,14 @@ export default function RegisterPage() {
           <select
             className="sb-input"
             value={uloga}
-            onChange={(e) => setUloga(e.target.value as "KUPAC" | "RESTORAN")}
+            onChange={(e) => setUloga(e.target.value as UserRole)}
             style={{ marginBottom: 16 }}
             required
           >
             <option value="KUPAC">Kupac</option>
             <option value="RESTORAN">Restoran</option>
+            <option value="DOSTAVLJAC">Dostavljač</option>
+            <option value="ADMIN">Admin</option>
           </select>
 
           <button
@@ -153,6 +170,5 @@ export default function RegisterPage() {
         </form>
       </div>
     </main>
-  )
+  );
 }
-

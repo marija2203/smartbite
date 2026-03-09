@@ -1,50 +1,56 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPage() {
-  const router = useRouter()
+  const router = useRouter();
 
-  const [email, setEmail] = useState("")
-  const [lozinka, setLozinka] = useState("")
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [email, setEmail] = useState("");
+  const [lozinka, setLozinka] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError("")
-    setLoading(true)
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, lozinka }),
-      })
+      });
 
-      const data = await res.json().catch(() => ({}))
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data.error || "Greška pri prijavi.")
+        throw new Error(data.error || "Greška pri prijavi.");
       }
 
-      // Sačuvaj token
       if (data?.token) {
-        localStorage.setItem("token", data.token)
+        localStorage.setItem("token", data.token);
       }
 
-      // Redirect po ulozi
-      if (data?.user?.uloga === "RESTORAN") {
-        router.push("/restaurant")
+      if (data?.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+
+      if (data?.user?.uloga === "ADMIN") {
+        router.push("/admin");
+      } else if (data?.user?.uloga === "DOSTAVLJAC") {
+        router.push("/deliveries");
+      } else if (data?.user?.uloga === "RESTORAN") {
+        router.push("/restaurant");
       } else {
-        router.push("/restaurants")
+        router.push("/restaurants");
       }
     } catch (err: any) {
-      setError(err.message)
+      setError(err.message || "Greška pri prijavi.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -95,8 +101,5 @@ export default function LoginPage() {
         </p>
       </div>
     </main>
-  )
-  
+  );
 }
-
-
